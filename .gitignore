@@ -1,0 +1,37 @@
+# Python Virtual Environment
+venv/
+.venv/
+env/
+
+# Python Cache & Compiled Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Environment Variables & Secrets (CRITICAL)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Frontend Node Modules & NextJS Build (Safety Net at Root)
+cartcoach-frontend/node_modules/
+cartcoach-frontend/.next/
+cartcoach-frontend/out/
+cartcoach-frontend/build/
+cartcoach-frontend/.vercel/
+
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
