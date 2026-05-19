@@ -25,7 +25,7 @@ export function DilemmaResolver({
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           aria-label="Urun karsilastirma paneli"
-          className="commerce-card relative overflow-hidden border-primary-100 bg-gradient-to-br from-white via-primary-50/30 to-orange-50/40 p-6"
+          className="commerce-card relative overflow-hidden border-primary-100 bg-gradient-to-br from-white via-primary-50/30 to-fuchsia-50/30 p-6"
         >
           <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-primary-200/25 blur-3xl" />
 
@@ -35,7 +35,7 @@ export function DilemmaResolver({
             </div>
             <div>
               <h2 className="font-bold text-foreground">
-                CartCoach Kararsizlik Savar
+                BUFF AI Kararsizlik Savar
               </h2>
               <p className="flex items-center gap-1 text-xs text-primary-700">
                 <Sparkles className="h-3.5 w-3.5" />
@@ -46,7 +46,7 @@ export function DilemmaResolver({
 
           <p className="relative z-10 mb-6 rounded-xl border border-primary-100/80 bg-white/80 p-4 text-sm leading-6 text-neutral-700 backdrop-blur-sm">
             {verdict ??
-              'Iki guclu saat arasinda kaldiginizi fark ettik. Karari kolaylastirmak icin temel farklari ozetledik.'}
+              'Iki premium teknoloji urunu arasinda kaldiginizi fark ettik. Karari kolaylastirmak icin temel farklari ozetledik.'}
           </p>
 
           <div className="relative z-10 grid gap-4 md:grid-cols-2">

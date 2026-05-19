@@ -24,7 +24,7 @@ export function OrderSummary({
       className={
         isSimpleMode
           ? 'rounded-2xl border-2 border-neutral-300 bg-white p-6'
-          : 'commerce-card sticky top-6 p-6'
+          : 'commerce-card p-6'
       }
     >
       {!isSimpleMode && (

@@ -20,7 +20,15 @@ export function CartItemCard({
     return (
       <div className="flex items-center justify-between gap-4 border-b border-neutral-200 py-5 last:border-0">
         <div className="flex items-center gap-4">
-          <ProductIcon icon={item.icon} size="lg" />
+          {item.imageUrl ? (
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="h-24 w-24 rounded-2xl object-cover"
+            />
+          ) : (
+            <ProductIcon icon={item.icon} size="lg" />
+          )}
           <h3 className="text-2xl font-semibold text-foreground">{item.name}</h3>
         </div>
         <span className="text-2xl font-bold text-foreground">
@@ -38,7 +46,16 @@ export function CartItemCard({
       className="group flex flex-col gap-4 rounded-2xl border border-neutral-100 bg-white p-4 shadow-xs transition-shadow hover:shadow-md sm:flex-row sm:items-center"
     >
       <div className="flex flex-1 items-start gap-4">
-        <ProductIcon icon={item.icon} size="md" />
+        {item.imageUrl ? (
+          <img
+            src={item.imageUrl}
+            alt={item.name}
+            className="h-20 w-20 shrink-0 rounded-2xl object-cover shadow-md"
+            loading="lazy"
+          />
+        ) : (
+          <ProductIcon icon={item.icon} size="md" />
+        )}
 
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex flex-wrap gap-2">

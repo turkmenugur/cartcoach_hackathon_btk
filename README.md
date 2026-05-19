@@ -1,17 +1,29 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/shopping-cart.svg" width="80" alt="CartCoach Logo"/>
-  <h1>CartCoach</h1>
-  <p><strong>Yapay Zeka Odaklı Otonom Sepet Kurtarma ve İkna Sistemi</strong></p>
+  <h1>BUFF Store</h1>
+  <p><strong>Gemini AI Destekli Premium Teknoloji E-Ticaret ve Otonom Sepet Kurtarma Sistemi</strong></p>
   <p><i>Google AI & BTK Hackathon 2026 - E-Ticaret Kategorisi</i></p>
 </div>
 
 ---
 
+## Yeni Konsept: BUFF Store
+
+BUFF Store, teknoloji yoğunluklu premium bir e-ticaret deneyimi olarak konumlandırılmıştır. Kullanıcı laptop, akıllı saat, kulaklık, oyun konsolu ve telefon gibi yüksek niyetli teknoloji ürünlerini incelerken sistem davranış sinyallerini toplar; Gemini + LangGraph agent pipeline'ı ile sepet terk riskini, fiyat hassasiyetini ve kararsızlığı analiz eder.
+
+Öne çıkan demo katmanları:
+
+- **Premium tech commerce UI:** Awwwards ilhamlı hero, grid, scanline, spotlight kart efektleri ve hareketli ürün vitrini.
+- **Gemini agent pipeline:** Analyst -> Router -> Strategist -> Synthesizer akışı.
+- **Marj korumalı teklif:** AI daha güçlü indirim denese bile işletme limiti aşılmaz.
+- **Kararsızlık savar:** Benzer ürünlerde ürün kıyaslama ve karar desteği.
+- **n8n otomasyon katmanı:** `N8N_WEBHOOK_URL` tanımlanırsa yüksek riskli sepetlerde webhook tetiklenir.
+
 ## 🚀 Vizyon ve Problem Tanımı
 
 Küresel e-ticaret ekosisteminde **sepet terk etme oranları ortalama %70** seviyesindedir. Mevcut çözümler (statik "sepetinizde ürün unuttunuz" e-postaları veya siteyi kapatırken çıkan jenerik %10 indirim pop-up'ları) bağlamdan yoksundur, kişiselleştirilmemiştir ve müşteride karşılık bulmamaktadır.
 
-**CartCoach**, kullanıcının site içi davranışlarını (imleç hareketleri, hareketsizlik süresi, sepet içeriği, sepet tutarı) anlık olarak analiz eden ve tam sepet terk edilmek üzereyken devreye giren **otonom bir "satış kapama" ve ikna ajanıdır.**
+**BUFF Store AI**, kullanıcının site içi davranışlarını (imleç hareketleri, hareketsizlik süresi, sepet içeriği, sepet tutarı) anlık olarak analiz eden ve tam sepet terk edilmek üzereyken devreye giren **otonom bir "satış kapama" ve ikna ajanıdır.**
 
 ### 💰 Doğrudan Yatırım Getirisi (ROI)
 CartCoach, e-ticaret işletmeleri için doğrudan gelir artırıcı bir yatırımdır. Örnek bir finansal kurtarım tablosu:
@@ -61,6 +73,26 @@ Müşteri tarafında (Frontend) Next.js 14, Tailwind CSS ve Framer Motion ile ta
 
 * 🎯 **Sade Mod (Focus Mode / Erişilebilirlik):** Dikkat dağınıklığı veya DEHB (ADHD) yaşayan kullanıcılar için tasarlanmıştır. Tek bir tuşla görselleri gizler, renk kontrastını optimize eder ve ekranı sadece "Ödeme Yap" butonuna odaklayan kusursuz bir sadeliğe büründürür.
 * ⚖️ **Kararsızlık Savar (Dilemma Resolver):** Sepete birbirine benzer iki ürün eklendiğinde (*analysis paralysis*) CartCoach durumu sezer. İki ürünün öne çıkan özelliklerini kıyaslayan şık bir karşılaştırma kartı açarak karar felcini önler.
+* 🧪 **Judge Mode Paneli:** Jüri demosu sırasında telemetri, risk skoru, router kararı, çalışan ajanlar, çağrılan tool'lar, Gemini canlı/fallback durumu, latency, ROI ve marj koruma tek panelde görünür.
+* 🛡️ **Marj Koruma Guardrail'i:** Agent yüksek riskli kullanıcıda daha agresif indirim önerebilir; kupon motoru işletmenin maksimum indirim limitini aşarsa teklifi otomatik sınırlar.
+
+---
+
+## 🏁 90 Saniyelik Jüri Demo Akışı
+
+1. **Düşük Risk** senaryosunu çalıştırın: CartCoach kullanıcıyı rahatsız etmez, router akışı sonlandırır.
+2. **Kararsızlık** senaryosunu çalıştırın: Agent ürün kıyaslama tool'unu çağırır ve karar felcini çözen mesaj üretir.
+3. **Fiyat Riski** senaryosunu çalıştırın: Agent kişisel kupon üretir ve tahmini kurtarılan ciro panelde görünür.
+4. **Marj Koruma** senaryosunu çalıştırın: Risk çok yüksek olduğu için güçlü teklif denenir, ancak indirim işletme limitine takılır.
+5. Sayfayı sıfırlayıp 5 saniye hareketsiz bekleyin: canlı telemetri otomatik olarak backend agent API'sini tetikler.
+
+Demo sırasında panelde özellikle şu kanıtlar gösterilmelidir:
+
+- `LIVE GEMINI` / `FALLBACK MODE` durumu
+- `Analyst -> Router -> Strategist -> Synthesizer` karar hattı
+- `get_user_abandonment_history`, `generate_dynamic_coupon`, `get_product_comparison_details` tool çağrıları
+- Aylık gelir kurtarma projeksiyonu
+- Marj koruma tetiklenip tetiklenmediği
 
 ---
 
@@ -131,7 +163,12 @@ Projeyi hızlıca denemek ve tüm akıllı özellikleri gözlemlemek için taray
 * **Senaryo:** Kullanıcı bütçesine göre sepeti terk etmek üzere.
 * **Ajan Akışı:** Analyst kullanıcının `fiyat duyarli` olduğunu anlar. Strategist kıyaslama yapmadan doğrudan dinamik bir indirim kuponu üretir. Synthesizer, tasarruf miktarını vurgulayan özel bir ikna pop-up metni hazırlar.
 
-### Senaryo C: Canlı Telemetri & Sihirli Dokunuş Testi (Idle)
+### Senaryo C: Marj Koruma Testi (Margin Guardrail)
+* **Tetikleme:** Üstteki **"Marj Koruma"** butonuna tıklayın.
+* **Senaryo:** Kullanıcının terk riski çok yüksek. Strategist daha güçlü bir teklif dener.
+* **Ajan Akışı:** Kupon motoru maksimum indirim limitini uygular ve işletme marjını korur. Judge Mode panelinde guardrail'in devreye girdiği görünür.
+
+### Senaryo D: Canlı Telemetri & Sihirli Dokunuş Testi (Idle)
 * **Tetikleme:** Sayfayı yenileyin veya **"Reset Demo"** butonuna tıklayın.
 * **Senaryo:** Gerçek kullanıcı davranışı simülasyonu.
 * **Deneyim:** Tarayıcıda farenizi hareket ettirmeyi bırakıp **5 saniye bekleyin**. Sayfanın altındaki **Telemetry Panel**'de saniyelerin sayıldığını göreceksiniz. Hareketsizlik limiti aşıldığında frontend arka plandaki Python API'sine telemetri gönderir. Ajanlar otonom olarak devreye girer ve pop-up ikna modülü ekranda belirir!

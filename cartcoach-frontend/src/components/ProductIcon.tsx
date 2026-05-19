@@ -1,6 +1,15 @@
 'use client';
 
-import { Activity, Watch, type LucideIcon } from 'lucide-react';
+import {
+  Activity,
+  Camera,
+  Gamepad2,
+  Headphones,
+  Laptop,
+  Smartphone,
+  Watch,
+  type LucideIcon,
+} from 'lucide-react';
 import type { ProductIconKey } from '@/types';
 
 const ICON_CONFIG: Record<
@@ -15,17 +24,52 @@ const ICON_CONFIG: Record<
 > = {
   'watch-series': {
     Icon: Watch,
-    label: 'Premium saat',
-    gradient: 'from-zinc-800 via-slate-700 to-zinc-900',
-    ring: 'ring-zinc-200/80',
-    iconClass: 'text-white drop-shadow-sm',
+    label: 'BUFF Aura Watch',
+    gradient: 'from-neutral-950 via-zinc-800 to-cyan-950',
+    ring: 'ring-cyan-200/80',
+    iconClass: 'text-cyan-100 drop-shadow-sm',
   },
   'watch-se': {
     Icon: Activity,
-    label: 'Akilli saat',
-    gradient: 'from-orange-500 via-amber-500 to-orange-600',
+    label: 'BUFF Pulse Watch',
+    gradient: 'from-amber-400 via-orange-500 to-rose-500',
     ring: 'ring-orange-200/80',
     iconClass: 'text-white drop-shadow-sm',
+  },
+  'laptop-pro': {
+    Icon: Laptop,
+    label: 'BUFF NeonBook',
+    gradient: 'from-indigo-950 via-slate-900 to-cyan-800',
+    ring: 'ring-cyan-200/70',
+    iconClass: 'text-cyan-100 drop-shadow-sm',
+  },
+  'audio-max': {
+    Icon: Headphones,
+    label: 'BUFF SonicPods',
+    gradient: 'from-fuchsia-700 via-violet-800 to-slate-950',
+    ring: 'ring-fuchsia-200/70',
+    iconClass: 'text-fuchsia-100 drop-shadow-sm',
+  },
+  console: {
+    Icon: Gamepad2,
+    label: 'BUFF PlayDock',
+    gradient: 'from-emerald-500 via-teal-700 to-slate-950',
+    ring: 'ring-emerald-200/70',
+    iconClass: 'text-emerald-50 drop-shadow-sm',
+  },
+  smartphone: {
+    Icon: Smartphone,
+    label: 'BUFF Titan Phone',
+    gradient: 'from-sky-500 via-blue-800 to-neutral-950',
+    ring: 'ring-sky-200/70',
+    iconClass: 'text-sky-50 drop-shadow-sm',
+  },
+  'camera-pro': {
+    Icon: Camera,
+    label: 'BUFF FrameCam',
+    gradient: 'from-zinc-900 via-stone-700 to-amber-500',
+    ring: 'ring-amber-200/70',
+    iconClass: 'text-amber-50 drop-shadow-sm',
   },
 };
 

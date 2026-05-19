@@ -17,6 +17,7 @@ const SCENARIOS: Array<{
 }> = [
   { id: 'price-sensitive', label: 'Fiyat riski', variant: 'primary' },
   { id: 'dilemma', label: 'Kararsizlik', variant: 'outline' },
+  { id: 'margin-guardrail', label: 'Marj koruma', variant: 'outline' },
   { id: 'low-risk', label: 'Dusuk risk', variant: 'outline' },
 ];
 
@@ -29,16 +30,16 @@ export function DemoScenarioBar({
   return (
     <section
       aria-label="Demo senaryolari"
-      className="commerce-card mb-6 grid gap-4 border-dashed border-primary-200 bg-gradient-to-r from-white to-primary-50/40 p-4 lg:grid-cols-[1fr_auto] lg:items-center"
+      className="commerce-card mb-5 grid gap-4 border-dashed border-primary-200 bg-gradient-to-r from-white to-primary-50/40 p-4 lg:grid-cols-[1fr_auto] lg:items-center"
     >
       <div>
         <h2 className="flex items-center gap-2 text-sm font-bold text-foreground">
           <Sparkles className="h-4 w-4 text-primary-600" />
-          Juri demo senaryolari
+          Hackathon demo kontrolleri
         </h2>
         <p className="mt-1 text-sm text-neutral-500">
-          LangGraph + Gemini akisini canli test edin. API kapaliysa fallback devreye
-          girer.
+          Bu butonlar normal kullanici akisi icin degil; juriye farkli AI
+          kararlarini hizli gostermek icin.
         </p>
       </div>
 

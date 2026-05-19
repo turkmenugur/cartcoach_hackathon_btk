@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BUFF Store Frontend
 
-## Getting Started
+Next.js tabanli premium teknoloji e-ticaret demosu. Bu ekran, BUFF Store backend agent API'sinden gelen sepet terk riski analizini kullanarak juriye agentic karar akisini gosterir.
 
-First, run the development server:
+## Calistirma
+
+```bash
+npm install
+npm run dev
+```
+
+Arayuz varsayilan olarak `http://localhost:3000` adresinde acilir.
+
+Backend varsayilan adresi:
+
+```env
+NEXT_PUBLIC_BUFF_STORE_API_URL=http://127.0.0.1:8000
+NEXT_PUBLIC_CARTCOACH_API_URL=http://127.0.0.1:8000
+```
+
+## Onemli Ekranlar
+
+- **BUFF Hero:** Awwwards ilhamli grid, scanline ve premium cihaz paneliyle ilk etkiyi kurar.
+- **Product Showcase:** Teknoloji urun vitrini, sepete ekleme ve urun bazli AI analiz aksiyonlarini sunar.
+- **Demo Scenario Bar:** Fiyat riski, kararsizlik, marj koruma ve dusuk risk senaryolarini tetikler.
+- **Judge Mode Panel:** Telemetri, router karari, tool call listesi, Gemini live/fallback durumu, latency, guardrail, n8n ve ROI bilgisini gosterir.
+- **Agent Popup:** Synthesizer agent'in musteriye gosterdigi nihai teklif mesajini, kuponu ve karar destek metnini sunar.
+- **Telemetry Panel:** Idle davranisini ve risk tetiklenmesini canli gosterir.
+- **Sade Mod:** Kullanici dikkatini odeme akisi uzerinde toplamak icin sade checkout deneyimi sunar.
+
+## Demo Akisi
+
+1. Backend'i proje kokunden baslatin:
+
+```bash
+python api_server.py
+```
+
+2. Frontend'i baslatin:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Juri demosunda sirasiyla su butonlari kullanin:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `Dusuk risk`: Router akisi sonlandirir, gereksiz popup yoktur.
+- `Kararsizlik`: Kiyaslama tool'u calisir.
+- `Fiyat riski`: Dinamik kupon uretilir.
+- `Marj koruma`: Indirim limiti asilirsa guardrail devreye girer.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Sayfayi sifirlayip 5 saniye bekleyin. Idle telemetry backend agent analizini otomatik tetikler.
 
-## Learn More
+## Build Kontrolu
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Bu komut TypeScript, lint ve production build kontrolu icin kullanilir.

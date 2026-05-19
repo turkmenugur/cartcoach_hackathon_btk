@@ -81,8 +81,8 @@ export function AgentPopup({
             exit="exit"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="cartcoach-popup-title"
-            aria-describedby="cartcoach-popup-message"
+            aria-labelledby="buff-popup-title"
+            aria-describedby="buff-popup-message"
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-xl overflow-hidden rounded-xl border border-primary-100 bg-surface-primary p-6 shadow-2xl"
           >
@@ -93,10 +93,10 @@ export function AgentPopup({
               </div>
               <div>
                 <h2
-                  id="cartcoach-popup-title"
+                  id="buff-popup-title"
                   className="text-xl font-bold text-foreground"
                 >
-                  CartCoach Ozel Teklif
+                  BUFF AI Ozel Teklif
                 </h2>
                 <p className="text-sm font-medium text-primary-600">
                   Gemini destekli satis asistani
@@ -106,11 +106,11 @@ export function AgentPopup({
 
             {/* ── Agent Message ────────────────────────────────── */}
             <p
-              id="cartcoach-popup-message"
+              id="buff-popup-message"
               className="mb-5 text-lg leading-8 text-neutral-700"
             >
               {agentResult?.final_message ??
-                'CartCoach sizin icin en uygun teklifi hazirliyor.'}
+                'BUFF AI sizin icin en uygun teklifi hazirliyor.'}
             </p>
 
             {/* ── Coupon Badge ─────────────────────────────────── */}
@@ -131,6 +131,9 @@ export function AgentPopup({
                 </div>
                 <p className="mt-2 text-xs text-neutral-500">
                   {agentResult.coupon_details.expires_in_minutes} dakika gecerli
+                  {agentResult.coupon_details.margin_protection_triggered
+                    ? ' · Marj koruma indirimi sinirladi'
+                    : ''}
                 </p>
               </div>
             )}

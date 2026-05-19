@@ -1,7 +1,14 @@
-import type { AgentResult, CartItemData, DemoScenario } from '@/types';
+import type {
+  AgentResult,
+  BackendProduct,
+  CartItemData,
+  DemoScenario,
+} from '@/types';
 
 export const API_URL =
-  process.env.NEXT_PUBLIC_CARTCOACH_API_URL ?? 'http://127.0.0.1:8000';
+  process.env.NEXT_PUBLIC_BUFF_STORE_API_URL ??
+  process.env.NEXT_PUBLIC_CARTCOACH_API_URL ??
+  'http://127.0.0.1:8000';
 
 export type TelemetryPayload = {
   user_id: string;
@@ -53,6 +60,13 @@ export const scenarioTelemetry: Record<DemoScenario, Partial<TelemetryPayload>> 
       scroll_depth: 88,
       exit_intent: false,
     },
+    'margin-guardrail': {
+      user_id: 'usr_9988',
+      idle_time_seconds: 180,
+      mouse_movements: 'low',
+      scroll_depth: 12,
+      exit_intent: true,
+    },
   };
 
 export async function analyzeCart(
@@ -93,4 +107,23 @@ export async function checkApiHealth(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function fetchProductCatalog(): Promise<{
+  source: 'supabase' | 'fallback' | 'mixed';
+  products: BackendProduct[];
+}> {
+  const response = await fetch(`${API_URL}/products`, {
+    method: 'GET',
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    throw new Error('Urun katalog API yanit vermedi');
+  }
+
+  return (await response.json()) as {
+    source: 'supabase' | 'fallback' | 'mixed';
+    products: BackendProduct[];
+  };
 }

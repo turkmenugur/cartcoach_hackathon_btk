@@ -14,12 +14,13 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "CartCoach — Otonom Sepet Kurtarma Sistemi",
+  title: "BUFF Store — Gemini AI Destekli Premium Tech Commerce",
   description:
-    "Gemini AI destekli multi-agent mimarisiyle sepet terk etme riskini analiz eden ve otonom ikna stratejileri ureten agentic e-ticaret sistemi. BTK & Google AI Hackathon 2026.",
+    "Gemini AI destekli multi-agent mimarisiyle teknoloji sepeti riskini analiz eden, kararsizligi cozen ve marj korumali teklif ureten premium e-ticaret deneyimi. BTK & Google AI Hackathon 2026.",
   keywords: [
-    "CartCoach",
+    "BUFF Store",
     "sepet kurtarma",
+    "premium teknoloji",
     "e-ticaret",
     "yapay zeka",
     "Gemini AI",
@@ -27,9 +28,9 @@ export const metadata: Metadata = {
     "multi-agent",
   ],
   openGraph: {
-    title: "CartCoach — AI Destekli Sepet Kurtarma",
+    title: "BUFF Store — AI Destekli Premium Tech Commerce",
     description:
-      "Sepet terk etme riskini otonom olarak analiz eden ve akilli ikna stratejileri ureten multi-agent sistem.",
+      "Teknoloji sepeti terk riskini otonom olarak analiz eden ve akilli ikna stratejileri ureten multi-agent sistem.",
     type: "website",
     locale: "tr_TR",
   },

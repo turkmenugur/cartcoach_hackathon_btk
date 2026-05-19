@@ -85,6 +85,7 @@ const config: Config = {
         inner:        "var(--shadow-inner)",
         primary:      "var(--shadow-primary)",
         "primary-lg": "var(--shadow-primary-lg)",
+        card:         "var(--shadow-card)",
       },
 
       /* ── Z-Index ───────────────────────────────────────── */

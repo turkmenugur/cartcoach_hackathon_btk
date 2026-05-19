@@ -20,36 +20,28 @@ export function TelemetryPanel({
       role="status"
       aria-label="Telemetri verisi"
       aria-live="polite"
-      className="fixed bottom-4 left-4 right-4 z-telemetry rounded-lg border border-neutral-800 bg-surface-overlay-heavy p-4 font-mono text-xs text-white shadow-2xl backdrop-blur-md sm:right-auto sm:min-w-72"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.88)' }}
+      className="fixed bottom-5 right-5 z-telemetry rounded-full border border-neutral-950/10 bg-white/86 px-4 py-3 font-mono text-[11px] text-neutral-800 shadow-xl backdrop-blur-md"
     >
-      <div className="mb-2 flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <span className="relative flex h-2 w-2">
           <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${isRiskHigh ? 'bg-error-400' : 'bg-success-500'}`} />
           <span className={`relative inline-flex h-2 w-2 rounded-full ${isRiskHigh ? 'bg-error-500' : 'bg-success-500'}`} />
         </span>
-        <span className="font-bold tracking-wider text-primary-300">
+        <span className="font-bold tracking-wider text-primary-800">
           TELEMETRY SENSOR
         </span>
-      </div>
-
-      <p className="text-neutral-300">
-        Kullanici Durumu:{' '}
-        <span className="font-semibold text-white">
+        <span className="hidden text-neutral-400 sm:inline">/</span>
+        <span className="hidden text-neutral-600 sm:inline">
           {idleTimeSeconds > 0 ? `IDLE (${idleTimeSeconds}s)` : 'ACTIVE'}
         </span>
-      </p>
-
-      <p className="text-neutral-300">
-        Risk:{' '}
         {isRiskHigh ? (
           <span className="font-bold text-error-400">
-            YUKSEK ({riskScore}/100)
+            RISK {riskScore}
           </span>
         ) : (
-          <span className="font-semibold text-success-500">DUSUK</span>
+          <span className="font-semibold text-success-600">LOW</span>
         )}
-      </p>
+      </div>
 
       {isAnalyzing && (
         <p className="mt-2 inline-flex items-center gap-1.5 text-primary-300">
