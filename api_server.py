@@ -1,4 +1,5 @@
 import json
+import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict
 
@@ -8,8 +9,9 @@ from supabase_client import is_supabase_configured, supabase_select
 from tools import get_product_catalog, process_automation_outbox
 
 
-HOST = "127.0.0.1"
-PORT = 8000
+HOST = os.environ.get("HOST", "0.0.0.0")
+PORT = int(os.environ.get("PORT", "8000"))
+
 
 
 class BuffStoreApiHandler(BaseHTTPRequestHandler):
