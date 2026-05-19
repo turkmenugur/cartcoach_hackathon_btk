@@ -8,9 +8,14 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from tools import (
+    build_ai_bundle_builder,
+    build_decision_card,
+    build_live_store_reranking,
+    build_shopping_twin,
     get_bundle_recommendations,
     generate_dynamic_coupon,
     get_product_comparison_details,
+    get_product_catalog,
     get_user_abandonment_history,
     summarize_product_reviews,
 )
@@ -26,6 +31,10 @@ class AgentState(TypedDict, total=False):
     comparison_data: Optional[Dict[str, Any]]
     review_summary: Optional[Dict[str, Any]]
     bundle_recommendations: Optional[Dict[str, Any]]
+    shopping_twin: Optional[Dict[str, Any]]
+    store_reranking: Optional[Dict[str, Any]]
+    decision_card: Optional[Dict[str, Any]]
+    ai_bundle_builder: Optional[Dict[str, Any]]
     final_message: Optional[str]
     workflow_events: List[str]
     model_trace: List[Dict[str, Any]]
@@ -189,13 +198,21 @@ def analyst_agent(state: AgentState) -> AgentState:
             f"Deterministic risk heuristic used. Reason: {error_detail}",
         )
 
+    shopping_twin = build_shopping_twin(user_data, history, user_profile)
+
     return {
         "user_id": user_id,
         "risk_score": risk_score,
         "user_profile": user_profile,
+        "shopping_twin": shopping_twin,
         "workflow_events": append_event(state, event),
         "model_trace": model_trace,
-        "tool_calls": append_tool_calls(state, "get_user_abandonment_history"),
+        "tool_calls": append_tool_calls(
+            state,
+            "get_user_abandonment_history",
+            "get_customer_memory_profile",
+            "build_shopping_twin",
+        ),
     }
 
 
@@ -213,6 +230,10 @@ def strategist_agent(state: AgentState) -> AgentState:
     comparison_data = None
     review_summary = None
     bundle_recommendations = None
+    decision_card = None
+    store_reranking = None
+    ai_bundle_builder = None
+    shopping_twin = state.get("shopping_twin") or {}
 
     if "karars" in user_profile and len(product_ids) >= 2:
         comparison_data = get_product_comparison_details(product_ids)
@@ -228,6 +249,35 @@ def strategist_agent(state: AgentState) -> AgentState:
     if len(product_ids) >= 1 and (risk_score > 65 or cart_total > 25000):
         bundle_recommendations = get_bundle_recommendations(user_data)
         state["tool_calls"] = append_tool_calls(state, "get_bundle_recommendations")
+
+    product_catalog = get_product_catalog()
+    store_reranking = build_live_store_reranking(
+        product_catalog.get("products") or [],
+        shopping_twin,
+        user_profile,
+    )
+    state["tool_calls"] = append_tool_calls(
+        state,
+        "get_product_catalog",
+        "build_live_store_reranking",
+    )
+
+    if len(product_ids) >= 2:
+        if not comparison_data:
+            comparison_data = get_product_comparison_details(product_ids)
+            state["tool_calls"] = append_tool_calls(
+                state,
+                "get_product_comparison_details",
+            )
+        decision_card = build_decision_card(product_ids, comparison_data, shopping_twin)
+        state["tool_calls"] = append_tool_calls(state, "build_decision_card")
+
+    ai_bundle_builder = build_ai_bundle_builder(
+        user_data,
+        bundle_recommendations,
+        shopping_twin,
+    )
+    state["tool_calls"] = append_tool_calls(state, "build_ai_bundle_builder")
 
     if "fiyat" in user_profile or risk_score > 70:
         discount_ratio = 0.10 if risk_score <= 85 else 0.15
@@ -259,7 +309,10 @@ def strategist_agent(state: AgentState) -> AgentState:
             "- Uretilen Kupon: {coupon_details}\n"
             "- Urun Kiyaslamasi: {comparison_data}\n\n"
             "- Yorum Ozeti: {review_summary}\n"
-            "- Bundle Onerileri: {bundle_recommendations}\n\n"
+            "- Bundle Onerileri: {bundle_recommendations}\n"
+            "- Shopping Twin: {shopping_twin}\n"
+            "- Karar Karti: {decision_card}\n"
+            "- AI Bundle Builder: {ai_bundle_builder}\n\n"
             "Gorevin: Kisa ve uygulanabilir bir ikna stratejisi yaz. "
             "Kupon varsa kodu ve indirimi dahil et. Kiyaslama varsa karar felcini azaltacak detayi dahil et. "
             "Yorumlarda guven sorunu veya fiyat itirazi varsa bunu stratejide dikkate al. "
@@ -285,6 +338,15 @@ def strategist_agent(state: AgentState) -> AgentState:
                     ensure_ascii=False,
                 )
                 if bundle_recommendations
+                else "Yok",
+                "shopping_twin": json.dumps(shopping_twin, ensure_ascii=False)
+                if shopping_twin
+                else "Yok",
+                "decision_card": json.dumps(decision_card, ensure_ascii=False)
+                if decision_card
+                else "Yok",
+                "ai_bundle_builder": json.dumps(ai_bundle_builder, ensure_ascii=False)
+                if ai_bundle_builder
                 else "Yok",
             }
         )
@@ -332,6 +394,10 @@ def strategist_agent(state: AgentState) -> AgentState:
         event_parts.append("reviews")
     if bundle_recommendations:
         event_parts.append("bundle")
+    if store_reranking:
+        event_parts.append("reranking")
+    if decision_card:
+        event_parts.append("decision card")
 
     return {
         "strategy": strategy_result,
@@ -339,6 +405,9 @@ def strategist_agent(state: AgentState) -> AgentState:
         "comparison_data": comparison_data,
         "review_summary": review_summary,
         "bundle_recommendations": bundle_recommendations,
+        "store_reranking": store_reranking,
+        "decision_card": decision_card,
+        "ai_bundle_builder": ai_bundle_builder,
         "workflow_events": append_event(state, " + ".join(event_parts)),
         "model_trace": model_trace,
         "tool_calls": list(state.get("tool_calls") or []),

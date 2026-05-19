@@ -99,6 +99,7 @@ export function CartDrawer({
                 items={items}
                 isVisible={items.length > 1}
                 verdict={agentResult?.comparison_data?.verdict}
+                decisionCard={agentResult?.decision_card}
               />
 
               <div className="mt-5">

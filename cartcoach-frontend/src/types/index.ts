@@ -42,6 +42,52 @@ export type ComparisonData = {
   products?: Record<string, unknown>;
 };
 
+export type ShoppingTwin = {
+  name: string;
+  intent_profile: string;
+  confidence: number;
+  preferred_categories: string[];
+  payment_preference?: string;
+  delivery_preference?: string;
+  coupon_affinity: number;
+  price_sensitivity: number;
+  behavior_tags: string[];
+  memory_summary: string;
+  source: 'supabase' | 'fallback';
+};
+
+export type StoreReranking = {
+  strategy_label: string;
+  reason: string;
+  ranked_product_ids: string[];
+  items: Array<{
+    product_id: string;
+    score: number;
+    reason: string;
+    card_message: string;
+  }>;
+};
+
+export type DecisionCard = {
+  title: string;
+  recommended_product_id: string;
+  recommended_name: string;
+  why: string;
+  choose_other_when: string;
+  regret_risk: number;
+  price_performance_score: number;
+  verdict: string;
+};
+
+export type AIBundleBuilder = {
+  bundle_name: string;
+  recommendation: string;
+  expected_lift_ratio: number;
+  projected_revenue_lift: number;
+  margin_safe: boolean;
+  why_it_fits: string;
+};
+
 export type ModelTraceItem = {
   agent: string;
   status: 'live' | 'fallback';
@@ -93,6 +139,10 @@ export type AgentResult = {
   final_message: string;
   coupon_details?: CouponDetails | null;
   comparison_data?: ComparisonData | null;
+  shopping_twin?: ShoppingTwin | null;
+  store_reranking?: StoreReranking | null;
+  decision_card?: DecisionCard | null;
+  ai_bundle_builder?: AIBundleBuilder | null;
   workflow_events: string[];
   tool_calls?: string[];
   model_trace?: ModelTraceItem[];

@@ -3,18 +3,20 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { GitCompare, Sparkles } from 'lucide-react';
 import { ProductIcon } from './ProductIcon';
-import type { CartItemData } from '@/types';
+import type { CartItemData, DecisionCard } from '@/types';
 
 interface DilemmaResolverProps {
   items: CartItemData[];
   isVisible: boolean;
   verdict?: string;
+  decisionCard?: DecisionCard | null;
 }
 
 export function DilemmaResolver({
   items,
   isVisible,
   verdict,
+  decisionCard,
 }: DilemmaResolverProps) {
   return (
     <AnimatePresence>
@@ -45,9 +47,45 @@ export function DilemmaResolver({
           </div>
 
           <p className="relative z-10 mb-6 rounded-xl border border-primary-100/80 bg-white/80 p-4 text-sm leading-6 text-neutral-700 backdrop-blur-sm">
-            {verdict ??
+            {decisionCard?.verdict ??
+              verdict ??
               'Iki premium teknoloji urunu arasinda kaldiginizi fark ettik. Karari kolaylastirmak icin temel farklari ozetledik.'}
           </p>
+
+          {decisionCard && (
+            <div className="relative z-10 mb-5 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl bg-white/80 p-4">
+                <p className="text-[10px] font-black uppercase text-primary-700">
+                  Senin icin daha dogru
+                </p>
+                <p className="mt-1 text-sm font-black text-foreground">
+                  {decisionCard.recommended_name}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-success-50 p-4">
+                <p className="text-[10px] font-black uppercase text-success-700">
+                  Fiyat/performans
+                </p>
+                <p className="mt-1 text-xl font-black text-success-800">
+                  {decisionCard.price_performance_score}/100
+                </p>
+              </div>
+              <div className="rounded-2xl bg-warning-50 p-4">
+                <p className="text-[10px] font-black uppercase text-warning-700">
+                  Pismanlik riski
+                </p>
+                <p className="mt-1 text-xl font-black text-warning-800">
+                  {decisionCard.regret_risk}/100
+                </p>
+              </div>
+            </div>
+          )}
+
+          {decisionCard && (
+            <p className="relative z-10 mb-5 rounded-xl bg-neutral-950 px-4 py-3 text-sm font-semibold leading-6 text-white">
+              {decisionCard.choose_other_when}
+            </p>
+          )}
 
           <div className="relative z-10 grid gap-4 md:grid-cols-2">
             {items.map((item, index) => (

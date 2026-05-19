@@ -30,6 +30,7 @@ import {
   EditorialStory,
   JudgeModePanel,
   ProductShowcase,
+  SmartCommerceLayer,
   StoreHeader,
   TelemetryPanel,
 } from '@/components';
@@ -206,14 +207,32 @@ export default function CartPage() {
   );
 
   const visibleProducts = useMemo(
-    () =>
-      selectedCategory === 'All'
-        ? products
-        : products.filter(
-            (product) => product.category === selectedCategory,
-          ),
-    [products, selectedCategory],
+    () => {
+      const base =
+        selectedCategory === 'All'
+          ? products
+          : products.filter(
+              (product) => product.category === selectedCategory,
+            );
+      const rankedIds = agentResult?.store_reranking?.ranked_product_ids ?? [];
+      if (!rankedIds.length) return base;
+
+      const rank = new Map(rankedIds.map((id, index) => [id, index]));
+      return [...base].sort(
+        (a, b) =>
+          (rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+          (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+      );
+    },
+    [agentResult?.store_reranking?.ranked_product_ids, products, selectedCategory],
   );
+
+  const rerankMessages = useMemo(() => {
+    const entries = agentResult?.store_reranking?.items ?? [];
+    return Object.fromEntries(
+      entries.map((item) => [item.product_id, item.card_message]),
+    );
+  }, [agentResult?.store_reranking?.items]);
 
   const productCategories = useMemo(
     () => [
@@ -434,12 +453,15 @@ export default function CartPage() {
           />
         )}
 
+        {!isSimpleMode && <SmartCommerceLayer agentResult={agentResult} />}
+
         {!isSimpleMode && (
           <ProductShowcase
             products={visibleProducts}
             cartIds={cart.map((item) => item.id)}
             categories={productCategories}
             selectedCategory={selectedCategory}
+            rerankMessages={rerankMessages}
             onSelectCategory={setSelectedCategory}
             onAddToCart={addToCart}
             onAskAi={askAiForProduct}

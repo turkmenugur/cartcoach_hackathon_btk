@@ -16,6 +16,7 @@ export { OrderSummary } from './OrderSummary';
 export { DemoScenarioBar } from './DemoScenarioBar';
 export { ProductShowcase } from './ProductShowcase';
 export { EditorialStory } from './EditorialStory';
+export { SmartCommerceLayer } from './SmartCommerceLayer';
 
 // Organisms
 export { BuffHero } from './BuffHero';

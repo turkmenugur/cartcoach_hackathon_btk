@@ -43,6 +43,8 @@ def get_user_abandonment_history(user_id: str) -> Dict[str, Any]:
     )
     if rows:
         row = rows[0]
+        memory = get_customer_memory_profile(user_id)
+        row["customer_memory"] = memory
         row["source"] = "supabase"
         return row
 
@@ -72,7 +74,9 @@ def get_user_abandonment_history(user_id: str) -> Dict[str, Any]:
     }
 
     if user_id in mock_db:
-        return mock_db[user_id]
+        profile = mock_db[user_id]
+        profile["customer_memory"] = get_customer_memory_profile(user_id)
+        return profile
 
     abandonment_rate = round(float(_stable_int(user_id, 34, 78)), 1)
     return {
@@ -84,6 +88,78 @@ def get_user_abandonment_history(user_id: str) -> Dict[str, Any]:
         "preferred_category": "General",
         "average_order_value": _stable_int(user_id + "aov", 6000, 22000),
         "return_rate": round(float(_stable_int(user_id + "returns", 1, 12)), 1),
+        "customer_memory": get_customer_memory_profile(user_id),
+        "source": "fallback",
+    }
+
+
+def get_customer_memory_profile(user_id: str) -> Dict[str, Any]:
+    """
+    Kullanici hakkinda arka plan alisveris hafizasini getirir.
+    Supabase'de buff_customer_memory yoksa fallback demo hafizasi kullanir.
+    """
+    print(f"\n[Tool Use] get_customer_memory_profile (user_id={user_id})")
+    rows = supabase_select(
+        "buff_customer_memory",
+        {
+            "select": "*",
+            "user_id": f"eq.{user_id}",
+            "limit": "1",
+        },
+    )
+    if rows:
+        row = rows[0]
+        row["source"] = "supabase"
+        return row
+
+    fallback = {
+        "usr_9988": {
+            "user_id": "usr_9988",
+            "preferred_categories": ["Wearable", "Audio", "Accessory"],
+            "price_sensitivity": 0.82,
+            "coupon_affinity": 0.76,
+            "payment_preference": "installment",
+            "delivery_preference": "fast",
+            "brand_affinity": "premium-but-deal-driven",
+            "purchase_cadence_days": 28,
+            "recent_purchases": [
+                {"product_id": "p110", "name": "BUFF AirCharge Stand", "price": 3999},
+                {"product_id": "p113", "name": "BUFF SonicBuds Lite", "price": 5499},
+            ],
+            "behavior_tags": ["kararsiz", "kuponla doner", "wellness odakli"],
+            "source": "fallback",
+        },
+        "usr_1234": {
+            "user_id": "usr_1234",
+            "preferred_categories": ["Desk", "Laptop", "Camera"],
+            "price_sensitivity": 0.32,
+            "coupon_affinity": 0.18,
+            "payment_preference": "card",
+            "delivery_preference": "standard",
+            "brand_affinity": "premium-first",
+            "purchase_cadence_days": 18,
+            "recent_purchases": [
+                {"product_id": "p123", "name": "BUFF StudioLight Pro", "price": 6499},
+                {"product_id": "p126", "name": "BUFF Router Mesh", "price": 6999},
+            ],
+            "behavior_tags": ["sadik", "creator desk", "premium tercih"],
+            "source": "fallback",
+        },
+    }
+    if user_id in fallback:
+        return fallback[user_id]
+
+    return {
+        "user_id": user_id,
+        "preferred_categories": ["General"],
+        "price_sensitivity": round(_stable_int(user_id + "price", 25, 85) / 100, 2),
+        "coupon_affinity": round(_stable_int(user_id + "coupon", 20, 80) / 100, 2),
+        "payment_preference": "card",
+        "delivery_preference": "standard",
+        "brand_affinity": "balanced",
+        "purchase_cadence_days": _stable_int(user_id + "cadence", 14, 45),
+        "recent_purchases": [],
+        "behavior_tags": ["genel"],
         "source": "fallback",
     }
 
@@ -132,6 +208,173 @@ def get_product_catalog() -> Dict[str, Any]:
         return {"source": source, "products": merged_products}
 
     return {"source": "fallback", "products": CATALOG_PRODUCTS}
+
+
+def build_shopping_twin(
+    user_data: Dict[str, Any],
+    history: Dict[str, Any],
+    user_profile: str,
+) -> Dict[str, Any]:
+    memory = history.get("customer_memory") or get_customer_memory_profile(
+        user_data.get("user_id") or "usr_demo"
+    )
+    cart_items = user_data.get("cart_items") or []
+    cart_categories = [
+        CATALOG_BY_ID[item.get("id")].get("category")
+        for item in cart_items
+        if item.get("id") in CATALOG_BY_ID
+    ]
+    price_sensitivity = float(memory.get("price_sensitivity") or 0)
+    coupon_affinity = float(memory.get("coupon_affinity") or 0)
+    cart_total = float(user_data.get("cart_total") or 0)
+
+    if "karars" in user_profile:
+        intent = "kararsiz karar arayan"
+    elif price_sensitivity > 0.7 or coupon_affinity > 0.65:
+        intent = "fiyat hassas firsat avcisi"
+    elif cart_total > 45000 or "premium" in str(memory.get("brand_affinity")):
+        intent = "premium performans arayan"
+    elif "Accessory" in cart_categories:
+        intent = "tamamlayici setup kuran"
+    else:
+        intent = "dengeli teknoloji alicisi"
+
+    return {
+        "name": "BUFF Shopping Twin",
+        "intent_profile": intent,
+        "confidence": 0.86 if memory.get("source") == "supabase" else 0.74,
+        "preferred_categories": memory.get("preferred_categories") or [],
+        "payment_preference": memory.get("payment_preference"),
+        "delivery_preference": memory.get("delivery_preference"),
+        "coupon_affinity": coupon_affinity,
+        "price_sensitivity": price_sensitivity,
+        "behavior_tags": memory.get("behavior_tags") or [],
+        "memory_summary": (
+            f"{memory.get('brand_affinity', 'balanced')} profil; "
+            f"{memory.get('payment_preference', 'card')} odeme; "
+            f"{memory.get('delivery_preference', 'standard')} teslimat; "
+            f"kupon egilimi %{round(coupon_affinity * 100)}."
+        ),
+        "source": memory.get("source", "fallback"),
+    }
+
+
+def build_live_store_reranking(
+    products: List[Dict[str, Any]],
+    shopping_twin: Dict[str, Any],
+    user_profile: str,
+) -> Dict[str, Any]:
+    preferred = set(shopping_twin.get("preferred_categories") or [])
+    price_sensitivity = float(shopping_twin.get("price_sensitivity") or 0)
+    coupon_affinity = float(shopping_twin.get("coupon_affinity") or 0)
+    intent = str(shopping_twin.get("intent_profile") or "")
+
+    ranked = []
+    for product in products:
+        price = float(product.get("price") or 0)
+        category = product.get("category")
+        margin = float(product.get("margin_ratio") or 0.25)
+        score = 50.0
+        reasons = []
+
+        if category in preferred:
+            score += 20
+            reasons.append("gecmis kategori tercihi")
+        if price_sensitivity > 0.7 and price < 16000:
+            score += 16
+            reasons.append("fiyat hassas profil")
+        if "premium" in intent and price > 30000:
+            score += 18
+            reasons.append("premium niyet")
+        if coupon_affinity > 0.65 and margin > 0.28:
+            score += 10
+            reasons.append("kupon marji uygun")
+        if "karars" in user_profile and category in {"Wearable", "Laptop", "Phone"}:
+            score += 8
+            reasons.append("karsilastirma icin uygun")
+
+        ranked.append(
+            {
+                "product_id": product.get("product_id"),
+                "score": round(score, 1),
+                "reason": ", ".join(reasons[:2]) or "genel uygunluk",
+                "card_message": (
+                    "Sana gore one cikarildi: "
+                    + (", ".join(reasons[:2]) or "dengeli tercih")
+                ),
+            }
+        )
+
+    ranked.sort(key=lambda item: item["score"], reverse=True)
+    return {
+        "strategy_label": "Live Store Re-Ranking",
+        "reason": "Urun sirasi kullanicinin hafizasi, sepet davranisi ve fiyat hassasiyetine gore yeniden dizildi.",
+        "ranked_product_ids": [item["product_id"] for item in ranked],
+        "items": ranked[:12],
+    }
+
+
+def build_decision_card(
+    product_ids: List[str],
+    comparison_data: Optional[Dict[str, Any]],
+    shopping_twin: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    products = fetch_products(product_ids[:2])
+    if len(products) < 2:
+        return None
+
+    price_sensitivity = float(shopping_twin.get("price_sensitivity") or 0)
+    sorted_products = sorted(products, key=lambda item: float(item.get("price") or 0))
+    recommended = sorted_products[0] if price_sensitivity > 0.65 else sorted_products[-1]
+    alternative = sorted_products[-1] if recommended == sorted_products[0] else sorted_products[0]
+    perf_score = 82 if recommended == sorted_products[0] else 91
+    regret_risk = 22 if recommended == sorted_products[0] else 31
+
+    return {
+        "title": "Kararsizlik Savar 2.0",
+        "recommended_product_id": recommended.get("product_id"),
+        "recommended_name": recommended.get("name"),
+        "why": (
+            "Fiyat hassasiyetin ve kupon kullanma egilimin nedeniyle daha dengeli secim."
+            if price_sensitivity > 0.65
+            else "Premium performans ve uzun omurlu kullanim sinyallerin daha guclu."
+        ),
+        "choose_other_when": f"{alternative.get('name')} sec: teknik ozellik ya da prestij senin icin fiyattan daha onemliyse.",
+        "regret_risk": regret_risk,
+        "price_performance_score": perf_score,
+        "verdict": (comparison_data or {}).get("verdict")
+        or f"{recommended.get('name')} bu profil icin daha dusuk karar pismanligi tasiyor.",
+    }
+
+
+def build_ai_bundle_builder(
+    user_data: Dict[str, Any],
+    bundle_recommendations: Optional[Dict[str, Any]],
+    shopping_twin: Dict[str, Any],
+) -> Dict[str, Any]:
+    cart_total = float(user_data.get("cart_total") or 0)
+    raw_items = (bundle_recommendations or {}).get("items") or []
+    first = raw_items[0] if raw_items else {}
+    bundle_name = first.get("bundle_name") or (
+        "Creator Desk Set"
+        if "Desk" in (shopping_twin.get("preferred_categories") or [])
+        else "BUFF Smart Add-on Kit"
+    )
+    expected_lift = float(first.get("expected_lift_ratio") or 0.08)
+    projected_lift = round(cart_total * expected_lift, 2)
+
+    return {
+        "bundle_name": bundle_name,
+        "recommendation": first.get("recommendation")
+        or "Sepete uygun tamamlayici aksesuar ve audio urunleri oner.",
+        "expected_lift_ratio": expected_lift,
+        "projected_revenue_lift": projected_lift,
+        "margin_safe": expected_lift <= 0.15,
+        "why_it_fits": (
+            f"{shopping_twin.get('intent_profile')} profili icin sepet degerini "
+            "artirirken indirim marjini guvenli tutar."
+        ),
+    }
 
 
 def get_product_comparison_details(product_ids: List[str]) -> Dict[str, Any]:

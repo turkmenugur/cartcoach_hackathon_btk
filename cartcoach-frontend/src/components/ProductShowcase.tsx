@@ -9,6 +9,7 @@ interface ProductShowcaseProps {
   cartIds: string[];
   categories: string[];
   selectedCategory: string;
+  rerankMessages?: Record<string, string>;
   onSelectCategory: (category: string) => void;
   onAddToCart: (product: CartItemData) => void;
   onAskAi: (product: CartItemData) => void | Promise<void>;
@@ -23,6 +24,7 @@ export function ProductShowcase({
   cartIds,
   categories,
   selectedCategory,
+  rerankMessages = {},
   onSelectCategory,
   onAddToCart,
   onAskAi,
@@ -155,7 +157,7 @@ export function ProductShowcase({
                     AI hint
                   </div>
                   <p className="text-xs font-semibold leading-5 text-neutral-700">
-                    {product.aiHint}
+                    {rerankMessages[product.id] ?? product.aiHint}
                   </p>
                 </div>
 

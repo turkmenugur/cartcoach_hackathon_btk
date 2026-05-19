@@ -9,6 +9,7 @@ drop table if exists buff_bundle_rules cascade;
 drop table if exists buff_product_review_summaries cascade;
 drop table if exists buff_offer_policies cascade;
 drop table if exists buff_products cascade;
+drop table if exists buff_customer_memory cascade;
 drop table if exists buff_user_profiles cascade;
 
 create table buff_user_profiles (
@@ -20,6 +21,21 @@ create table buff_user_profiles (
   preferred_category text not null default 'General',
   average_order_value numeric not null default 0,
   return_rate numeric not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table buff_customer_memory (
+  user_id text primary key references buff_user_profiles(user_id) on delete cascade,
+  preferred_categories jsonb not null default '[]'::jsonb,
+  price_sensitivity numeric not null default 0.5,
+  coupon_affinity numeric not null default 0.5,
+  payment_preference text not null default 'card',
+  delivery_preference text not null default 'standard',
+  brand_affinity text not null default 'balanced',
+  purchase_cadence_days integer not null default 30,
+  recent_purchases jsonb not null default '[]'::jsonb,
+  behavior_tags jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -126,6 +142,43 @@ insert into buff_user_profiles (
 ) values
   ('usr_9988', 5, 8, 61.5, 'Silver', 'Wearable', 18950, 6.8),
   ('usr_1234', 12, 2, 14.2, 'Gold', 'Desk', 24990, 2.1);
+
+insert into buff_customer_memory (
+  user_id,
+  preferred_categories,
+  price_sensitivity,
+  coupon_affinity,
+  payment_preference,
+  delivery_preference,
+  brand_affinity,
+  purchase_cadence_days,
+  recent_purchases,
+  behavior_tags
+) values
+  (
+    'usr_9988',
+    '["Wearable", "Audio", "Accessory"]'::jsonb,
+    0.82,
+    0.76,
+    'installment',
+    'fast',
+    'premium-but-deal-driven',
+    28,
+    '[{"product_id":"p110","name":"BUFF AirCharge Stand","price":3999},{"product_id":"p113","name":"BUFF SonicBuds Lite","price":5499}]'::jsonb,
+    '["kararsiz", "kuponla doner", "wellness odakli"]'::jsonb
+  ),
+  (
+    'usr_1234',
+    '["Desk", "Laptop", "Camera"]'::jsonb,
+    0.32,
+    0.18,
+    'card',
+    'standard',
+    'premium-first',
+    18,
+    '[{"product_id":"p123","name":"BUFF StudioLight Pro","price":6499},{"product_id":"p126","name":"BUFF Router Mesh","price":6999}]'::jsonb,
+    '["sadik", "creator desk", "premium tercih"]'::jsonb
+  );
 
 insert into buff_offer_policies (
   strategy_type,
