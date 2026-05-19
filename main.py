@@ -83,10 +83,13 @@ def run_cartcoach_analysis(user_data: Dict[str, Any]) -> Dict[str, Any]:
     intervention_required = risk_score > 60
     workflow_events = list(result.get("workflow_events") or [])
 
-    if intervention_required:
-        workflow_events.insert(2, "Router selected intervention path")
-    else:
-        workflow_events.append("Router ended workflow: no intervention")
+    router_event = (
+        "Router selected intervention path"
+        if intervention_required
+        else "Router ended workflow: no intervention"
+    )
+    if router_event not in workflow_events:
+        workflow_events.append(router_event)
 
     return {
         "user_id": result.get("user_id"),

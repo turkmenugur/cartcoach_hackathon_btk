@@ -2,12 +2,17 @@
    CartCoach — Shared Type Definitions
    ============================================================ */
 
+export type ProductIconKey = 'watch-series' | 'watch-se';
+
 export type CartItemData = {
   id: string;
   name: string;
   price: number;
+  /** @deprecated Use icon — kept for backward compatibility */
   image: string;
+  icon: ProductIconKey;
   feature: string;
+  badge?: string;
 };
 
 export type CouponDetails = {

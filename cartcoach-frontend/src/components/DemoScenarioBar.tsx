@@ -1,54 +1,76 @@
 'use client';
 
-import { RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles } from 'lucide-react';
 import type { DemoScenario } from '@/types';
 
 interface DemoScenarioBarProps {
-  onRunScenario: (scenario: DemoScenario) => void;
+  onRunScenario: (scenario: DemoScenario) => void | Promise<void>;
   onReset: () => void;
+  isLoading?: boolean;
+  activeScenario?: DemoScenario | null;
 }
 
-export function DemoScenarioBar({ onRunScenario, onReset }: DemoScenarioBarProps) {
+const SCENARIOS: Array<{
+  id: DemoScenario;
+  label: string;
+  variant: 'primary' | 'outline';
+}> = [
+  { id: 'price-sensitive', label: 'Fiyat riski', variant: 'primary' },
+  { id: 'dilemma', label: 'Kararsizlik', variant: 'outline' },
+  { id: 'low-risk', label: 'Dusuk risk', variant: 'outline' },
+];
+
+export function DemoScenarioBar({
+  onRunScenario,
+  onReset,
+  isLoading = false,
+  activeScenario = null,
+}: DemoScenarioBarProps) {
   return (
     <section
       aria-label="Demo senaryolari"
-      className="mb-6 grid gap-3 rounded-lg border border-neutral-200 bg-surface-primary p-4 shadow-sm lg:grid-cols-[1fr_auto] lg:items-center"
+      className="commerce-card mb-6 grid gap-4 border-dashed border-primary-200 bg-gradient-to-r from-white to-primary-50/40 p-4 lg:grid-cols-[1fr_auto] lg:items-center"
     >
       <div>
-        <h2 className="text-sm font-bold text-foreground">
+        <h2 className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <Sparkles className="h-4 w-4 text-primary-600" />
           Juri demo senaryolari
         </h2>
         <p className="mt-1 text-sm text-neutral-500">
-          Beklemeden farkli agent yollarini gostermek icin bir senaryo secin.
+          LangGraph + Gemini akisini canli test edin. API kapaliysa fallback devreye
+          girer.
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => onRunScenario('price-sensitive')}
-          className="min-h-touch rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-primary transition-all duration-fast hover:bg-primary-700 hover:shadow-primary-lg active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-        >
-          Fiyat riski
-        </button>
-        <button
-          type="button"
-          onClick={() => onRunScenario('dilemma')}
-          className="min-h-touch rounded-lg border border-neutral-200 bg-surface-primary px-4 py-2.5 text-sm font-bold text-foreground transition-all duration-fast hover:bg-neutral-50 hover:shadow-sm active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-        >
-          Kararsizlik
-        </button>
-        <button
-          type="button"
-          onClick={() => onRunScenario('low-risk')}
-          className="min-h-touch rounded-lg border border-neutral-200 bg-surface-primary px-4 py-2.5 text-sm font-bold text-foreground transition-all duration-fast hover:bg-neutral-50 hover:shadow-sm active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-        >
-          Dusuk risk
-        </button>
+        {SCENARIOS.map(({ id, label, variant }) => {
+          const isActive = activeScenario === id;
+          const isPrimary = variant === 'primary';
+
+          return (
+            <button
+              key={id}
+              type="button"
+              disabled={isLoading}
+              onClick={() => void onRunScenario(id)}
+              className={`inline-flex min-h-touch items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70 ${
+                isPrimary
+                  ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-primary hover:from-primary-700 hover:to-primary-600'
+                  : 'border border-neutral-200 bg-white text-foreground hover:border-primary-200 hover:bg-primary-50'
+              }`}
+            >
+              {isActive && isLoading && (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              )}
+              {label}
+            </button>
+          );
+        })}
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex min-h-touch items-center gap-2 rounded-lg border border-neutral-200 bg-surface-primary px-4 py-2.5 text-sm font-bold text-foreground transition-all duration-fast hover:bg-neutral-50 hover:shadow-sm active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+          disabled={isLoading}
+          className="inline-flex min-h-touch items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-bold text-foreground transition hover:bg-neutral-50 disabled:opacity-70"
         >
           <RefreshCw className="h-4 w-4" />
           Sifirla

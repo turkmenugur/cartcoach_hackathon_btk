@@ -1,9 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
 import { useTracker } from '@/hooks/useTracker';
+import {
+  analyzeCart,
+  buildTelemetryPayload,
+  checkApiHealth,
+  scenarioTelemetry,
+} from '@/lib/api';
+import {
+  fallbackAgentResult,
+  scenarioFallbackResults,
+} from '@/lib/demo-fallback';
 import type { AgentResult, CartItemData, DemoScenario } from '@/types';
 import {
   AgentLog,
@@ -14,22 +24,18 @@ import {
   OrderSummary,
   RiskMetric,
   ROIMetric,
+  StoreHeader,
   TelemetryPanel,
 } from '@/components';
 
-/* ============================================================
-   Static Data & Configuration
-   ============================================================ */
-
-const API_URL =
-  process.env.NEXT_PUBLIC_CARTCOACH_API_URL ?? 'http://127.0.0.1:8000';
-
-const CART_ITEMS: CartItemData[] = [
+const INITIAL_CART: CartItemData[] = [
   {
     id: 'p123',
     name: 'Apple Watch Series 9',
     price: 14999,
     image: 'AW',
+    icon: 'watch-series',
+    badge: 'Yarin kargoda',
     feature: 'Gelismis saglik sensorleri ve her zaman acik ekran',
   },
   {
@@ -37,97 +43,33 @@ const CART_ITEMS: CartItemData[] = [
     name: 'Apple Watch SE (2. Nesil)',
     price: 9499,
     image: 'SE',
+    icon: 'watch-se',
+    badge: 'Ucretsiz kargo',
     feature: 'Fiyat/performans odakli temel akilli saat deneyimi',
   },
 ];
 
-const fallbackAgentResult: AgentResult = {
-  risk_score: 85,
-  user_profile: 'kararsiz',
-  intervention_required: true,
-  final_message:
-    'Sepetinizdeki iki saat arasinda kaldiginizi fark ettik. CART15 kodu 15 dakika boyunca size ozel indirim saglar. Hazirsaniz sepetinizi birlikte tamamlayalim.',
-  coupon_details: {
-    coupon_code: 'CART15',
-    discount_ratio: 0.15,
-    discount_amount: 3599.7,
-    new_total: 20398.3,
-    expires_in_minutes: 15,
-    margin_protection_triggered: false,
-  },
-  comparison_data: {
-    comparison_found: true,
-    verdict:
-      'Series 9 gelismis ekran ve sensorler icin, SE ise fiyat/performans icin daha uygundur.',
-  },
-  workflow_events: [
-    'Telemetry captured',
-    'Analyst fallback risk: 85/100 (kararsiz)',
-    'Router selected intervention path',
-    'Strategist selected intervention + coupon CART15 + comparison',
-    'Synthesizer prepared popup message',
-  ],
-};
-
-const scenarioResults: Record<DemoScenario, AgentResult> = {
-  'price-sensitive': {
-    risk_score: 91,
-    user_profile: 'fiyat duyarli',
-    intervention_required: true,
-    final_message:
-      'Sepetiniz icin CART15 kodunu hazirladik. Bu teklif 15 dakika gecerli ve toplam tutarda 3.674 TL avantaj saglar. Hazirsaniz siparisi birlikte tamamlayalim.',
-    coupon_details: {
-      coupon_code: 'CART15',
-      discount_ratio: 0.15,
-      discount_amount: 3674.7,
-      new_total: 20823.3,
-      expires_in_minutes: 15,
-      margin_protection_triggered: false,
-    },
-    comparison_data: null,
-    workflow_events: [
-      'Telemetry captured',
-      'Analyst calculated risk: 91/100 (fiyat duyarli)',
-      'Router selected intervention path',
-      'Strategist selected intervention + coupon CART15',
-      'Synthesizer prepared popup message',
-    ],
-  },
-  dilemma: fallbackAgentResult,
-  'low-risk': {
-    risk_score: 28,
-    user_profile: 'odaklanmis',
-    intervention_required: false,
-    final_message:
-      'Risk dusuk oldugu icin CartCoach kullaniciyi rahatsiz etmedi.',
-    coupon_details: null,
-    comparison_data: null,
-    workflow_events: [
-      'Telemetry captured',
-      'Analyst calculated risk: 28/100 (odaklanmis)',
-      'Router ended workflow: no intervention',
-    ],
-  },
-};
-
-/* ============================================================
-   Page Component
-   ============================================================ */
-
 export default function CartPage() {
-  /* ── State ──────────────────────────────────────────────── */
   const [isSimpleMode, setIsSimpleMode] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [agentResult, setAgentResult] = useState<AgentResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [forcePopup, setForcePopup] = useState(false);
+  const [cart, setCart] = useState<CartItemData[]>(INITIAL_CART);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
+  const [activeScenario, setActiveScenario] = useState<DemoScenario | null>(
+    null,
+  );
 
-  const { isRiskHigh, idleTimeSeconds, mouseMovements } = useTracker(5);
+  const { isRiskHigh, idleTimeSeconds, mouseMovements, reset: resetTracker } =
+    useTracker(5);
 
-  /* ── Derived values ─────────────────────────────────────── */
-  const cart = useMemo(() => CART_ITEMS, []);
-  const total = cart.reduce((acc, item) => acc + item.price, 0);
+  const total = useMemo(
+    () => cart.reduce((acc, item) => acc + item.price, 0),
+    [cart],
+  );
 
   const recoveredRevenue = agentResult?.coupon_details
     ? Math.round(agentResult.coupon_details.new_total)
@@ -141,19 +83,72 @@ export default function CartPage() {
     (isRiskHigh || forcePopup) &&
     !isSimpleMode &&
     !isDismissed &&
-    (agentResult?.intervention_required ?? true);
+    Boolean(agentResult?.intervention_required);
 
-  const riskScore =
-    agentResult?.risk_score ?? (isRiskHigh ? 85 : 24);
+  const riskScore = agentResult?.risk_score ?? (isRiskHigh ? 85 : 24);
   const userProfile =
     agentResult?.user_profile ?? (isRiskHigh ? 'beklemede' : 'aktif');
 
-  /* ── Handlers ───────────────────────────────────────────── */
-  const runDemoScenario = (scenario: DemoScenario) => {
-    setAgentResult(scenarioResults[scenario]);
-    setAnalysisError(null);
+  const runAnalysis = useCallback(
+    async (
+      telemetryOverrides: Parameters<typeof buildTelemetryPayload>[1] = {},
+      fallback: AgentResult = fallbackAgentResult,
+    ) => {
+      if (cart.length === 0) {
+        setStatusMessage('Sepet bos oldugu icin agent analizi calistirilmadi.');
+        return null;
+      }
+
+      setIsAnalyzing(true);
+      setAnalysisError(null);
+      setStatusMessage(null);
+
+      const payload = buildTelemetryPayload(cart, {
+        idle_time_seconds: Math.max(idleTimeSeconds, 5),
+        mouse_movements: mouseMovements < 5 ? 'low' : 'active',
+        ...telemetryOverrides,
+      });
+
+      try {
+        const result = await analyzeCart(payload);
+        setAgentResult(result);
+        setForcePopup(Boolean(result.intervention_required));
+        setApiOnline(true);
+        return result;
+      } catch (error) {
+        setAgentResult(fallback);
+        setForcePopup(fallback.intervention_required);
+        setAnalysisError(
+          error instanceof Error
+            ? error.message
+            : 'Agent API gecici olarak kullanilamiyor',
+        );
+        setApiOnline(false);
+        return fallback;
+      } finally {
+        setIsAnalyzing(false);
+      }
+    },
+    [cart, idleTimeSeconds, mouseMovements],
+  );
+
+  const runDemoScenario = async (scenario: DemoScenario) => {
+    setActiveScenario(scenario);
     setIsDismissed(false);
-    setForcePopup(scenarioResults[scenario].intervention_required);
+    resetTracker();
+
+    const result = await runAnalysis(
+      scenarioTelemetry[scenario],
+      scenarioFallbackResults[scenario],
+    );
+
+    if (result && !result.intervention_required) {
+      setStatusMessage(
+        'Risk dusuk: CartCoach mudahale etmedi (router -> END).',
+      );
+    }
+
+    setActiveScenario(null);
   };
 
   const resetDemo = () => {
@@ -161,175 +156,153 @@ export default function CartPage() {
     setAnalysisError(null);
     setIsDismissed(false);
     setForcePopup(false);
+    setStatusMessage(null);
+    setActiveScenario(null);
+    setCart(INITIAL_CART);
+    resetTracker();
   };
 
-  /* ── Agent API call on risk detection ───────────────────── */
+  const removeFromCart = (itemId: string) => {
+    setCart((items) => items.filter((item) => item.id !== itemId));
+    setStatusMessage('Urun sepetten kaldirildi.');
+  };
+
+  const handleCheckout = () => {
+    setStatusMessage(
+      isSimpleMode
+        ? 'Demo: Odeme adimina gecildi.'
+        : 'Demo: Guvenli odeme akisi baslatildi.',
+    );
+    setIsDismissed(true);
+  };
+
   useEffect(() => {
-    if (!isRiskHigh || agentResult || isAnalyzing) return;
+    void checkApiHealth().then(setApiOnline);
+  }, []);
 
-    const analyzeCart = async () => {
-      setIsAnalyzing(true);
-      setAnalysisError(null);
+  useEffect(() => {
+    if (!isRiskHigh || agentResult || isAnalyzing || activeScenario) return;
+    if (cart.length === 0) return;
 
-      try {
-        const response = await fetch(`${API_URL}/analyze-cart`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_data: {
-              user_id: 'usr_9988',
-              idle_time_seconds: Math.max(idleTimeSeconds, 95),
-              cart_items: cart.map(({ id, name, price }) => ({
-                id,
-                name,
-                price,
-              })),
-              cart_total: total,
-              mouse_movements: mouseMovements < 5 ? 'low' : 'active',
-              scroll_depth: 72,
-              exit_intent: false,
-            },
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Agent API yanit vermedi');
-        }
-
-        const result = (await response.json()) as AgentResult;
-        setAgentResult(result);
-      } catch (error) {
-        setAgentResult(fallbackAgentResult);
-        setAnalysisError(
-          error instanceof Error
-            ? error.message
-            : 'Agent API gecici olarak kullanilamiyor',
-        );
-      } finally {
-        setIsAnalyzing(false);
-      }
-    };
-
-    void analyzeCart();
+    void runAnalysis({ idle_time_seconds: Math.max(idleTimeSeconds, 95) });
   }, [
+    activeScenario,
     agentResult,
-    cart,
+    cart.length,
     idleTimeSeconds,
     isAnalyzing,
     isRiskHigh,
-    mouseMovements,
-    total,
+    runAnalysis,
   ]);
 
-  /* ── Render ─────────────────────────────────────────────── */
   return (
     <motion.main
       id="main-content"
       initial={false}
       animate={{
-        backgroundColor: isSimpleMode ? '#f8fafc' : '#f9fafb',
-        color: isSimpleMode ? '#0f172a' : '#111827',
+        backgroundColor: isSimpleMode ? '#f8fafc' : 'transparent',
       }}
-      className="min-h-screen p-6 font-sans transition-colors duration-slower md:p-8"
+      className={`min-h-screen font-sans transition-colors duration-slower ${
+        isSimpleMode ? 'p-6 md:p-8' : 'commerce-page-bg p-4 md:p-6 lg:p-8'
+      }`}
     >
       <div className="mx-auto max-w-container">
-        {/* ── Header ────────────────────────────────────────── */}
-        <header className="mb-8 flex flex-col gap-4 border-b border-neutral-200 pb-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="flex items-center gap-2.5 text-2xl font-bold text-foreground">
-              {!isSimpleMode && (
-                <ShoppingCart className="h-6 w-6 text-primary-600" />
-              )}
-              {isSimpleMode ? 'Sepet' : 'CartCoach Demo Checkout'}
-            </h1>
-            {!isSimpleMode && (
-              <p className="mt-1 text-sm text-neutral-500">
-                Telemetry + LangGraph agents + Gemini powered intervention
-              </p>
-            )}
-          </div>
+        <StoreHeader
+          cartCount={cart.length}
+          isSimpleMode={isSimpleMode}
+          apiOnline={apiOnline}
+          onToggleSimpleMode={() => setIsSimpleMode(!isSimpleMode)}
+          simpleModeLabel={isSimpleMode ? 'Standart' : 'Sade Mod'}
+          simpleModeIcon={
+            isSimpleMode ? (
+              <Eye className="h-4 w-4" />
+            ) : (
+              <EyeOff className="h-4 w-4" />
+            )
+          }
+        />
 
-          <div className="flex flex-wrap items-center gap-3">
-            {!isSimpleMode && (
-              <span className="inline-flex items-center gap-1.5 text-sm text-neutral-500">
-                Guvenli Odeme
-                <ShieldCheck className="h-4 w-4 text-success-600" />
-              </span>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setIsSimpleMode(!isSimpleMode)}
-              aria-pressed={isSimpleMode}
-              className={`flex min-h-touch items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-fast focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
-                isSimpleMode
-                  ? 'bg-neutral-900 text-white shadow-md hover:bg-black'
-                  : 'border border-neutral-200 bg-surface-primary text-neutral-700 hover:bg-neutral-50 hover:shadow-sm'
-              }`}
-            >
-              {isSimpleMode ? (
-                <Eye className="h-4 w-4" />
-              ) : (
-                <EyeOff className="h-4 w-4" />
-              )}
-              {isSimpleMode ? 'Standart Gorunum' : 'Sade Mod'}
-            </button>
-          </div>
-        </header>
-
-        {/* ── Demo Scenarios ────────────────────────────────── */}
         {!isSimpleMode && (
           <DemoScenarioBar
             onRunScenario={runDemoScenario}
             onReset={resetDemo}
+            isLoading={isAnalyzing}
+            activeScenario={activeScenario}
           />
         )}
 
-        {/* ── Main Grid ─────────────────────────────────────── */}
+        <AnimatePresence>
+          {statusMessage && !isSimpleMode && (
+            <motion.p
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              role="status"
+              className="mb-4 rounded-xl border border-primary-200 bg-white/90 px-4 py-3 text-sm text-primary-900 shadow-sm backdrop-blur-sm"
+            >
+              {statusMessage}
+            </motion.p>
+          )}
+        </AnimatePresence>
+
         <div
           className={`grid gap-6 ${
             isSimpleMode ? 'grid-cols-1' : 'lg:grid-cols-[1fr_360px]'
           }`}
         >
-          {/* ── Left Column: Cart + Dilemma ───────────────── */}
           <div className="space-y-6">
             <motion.section
               layout
               aria-label="Sepet urunleri"
-              className={`border bg-surface-primary p-5 ${
+              className={
                 isSimpleMode
-                  ? 'rounded-lg border-2 border-neutral-300 shadow-none'
-                  : 'rounded-lg border-neutral-200 shadow-sm'
-              }`}
+                  ? 'rounded-2xl border-2 border-neutral-300 bg-white p-5'
+                  : 'commerce-card p-4 md:p-5'
+              }
             >
-              {cart.map((item) => (
-                <CartItemCard
-                  key={item.id}
-                  item={item}
-                  isSimpleMode={isSimpleMode}
-                />
-              ))}
+              {!isSimpleMode && cart.length > 0 && (
+                <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-neutral-500">
+                  Sepetiniz ({cart.length} urun)
+                </h2>
+              )}
+              {cart.length === 0 ? (
+                <p className="py-12 text-center text-sm text-neutral-500">
+                  Sepetiniz bos. Demo senaryosu icin Sifirla butonuna basin.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {cart.map((item) => (
+                    <CartItemCard
+                      key={item.id}
+                      item={item}
+                      isSimpleMode={isSimpleMode}
+                      onRemove={() => removeFromCart(item.id)}
+                    />
+                  ))}
+                </div>
+              )}
             </motion.section>
 
             <DilemmaResolver
               items={cart}
               isVisible={!isSimpleMode && cart.length > 1}
+              verdict={agentResult?.comparison_data?.verdict}
             />
           </div>
 
-          {/* ── Right Column: Sidebar ─────────────────────── */}
           <aside className="space-y-6" aria-label="Siparis ozeti ve metrikler">
             {!isSimpleMode && (
               <div className="grid grid-cols-2 gap-3">
-                <RiskMetric
-                  riskScore={riskScore}
-                  userProfile={userProfile}
-                />
+                <RiskMetric riskScore={riskScore} userProfile={userProfile} />
                 <ROIMetric monthlyRecovery={projectedMonthlyRecovery} />
               </div>
             )}
 
-            <OrderSummary items={cart} isSimpleMode={isSimpleMode} />
+            <OrderSummary
+              items={cart}
+              isSimpleMode={isSimpleMode}
+              onCheckout={handleCheckout}
+            />
 
             {!isSimpleMode && (
               <AgentLog
@@ -342,7 +315,6 @@ export default function CartPage() {
           </aside>
         </div>
 
-        {/* ── Telemetry HUD ─────────────────────────────────── */}
         {!isSimpleMode && (
           <TelemetryPanel
             idleTimeSeconds={idleTimeSeconds}
@@ -352,12 +324,14 @@ export default function CartPage() {
           />
         )}
 
-        {/* ── Agent Popup Modal ─────────────────────────────── */}
         <AgentPopup
           isVisible={shouldShowPopup}
           agentResult={agentResult}
           onDismiss={() => setIsDismissed(true)}
-          onAccept={() => setIsDismissed(true)}
+          onAccept={() => {
+            setIsDismissed(true);
+            setStatusMessage('Demo: Teklif kabul edildi, sepet korunuyor.');
+          }}
         />
       </div>
     </motion.main>

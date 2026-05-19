@@ -1,35 +1,40 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface TrackerData {
   idleTimeSeconds: number;
   isRiskHigh: boolean;
   mouseMovements: number;
+  reset: () => void;
 }
 
 export function useTracker(idleThresholdSeconds: number = 5): TrackerData {
   const [idleTime, setIdleTime] = useState(0);
   const [isRiskHigh, setIsRiskHigh] = useState(false);
   const [mouseMovements, setMouseMovements] = useState(0);
-  
+
   const idleTimeRef = useRef(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const reset = useCallback(() => {
+    idleTimeRef.current = 0;
+    setIdleTime(0);
+    setIsRiskHigh(false);
+    setMouseMovements(0);
+  }, []);
 
   useEffect(() => {
-    // Fare hareket ettiğinde idle süresini sıfırla ve hareket sayısını artır
-    const handleMouseMove = () => {
+    const handleActivity = () => {
       idleTimeRef.current = 0;
       setIdleTime(0);
+      setIsRiskHigh(false);
       setMouseMovements((prev) => prev + 1);
-      
-      // Eğer kullanıcı tekrar hareket ederse, riski geçici olarak sıfırlayabiliriz 
-      // (veya risk bir kere tetiklendiyse pop-up açık kalabilir, burada pop-up açık kalması için kapatmıyoruz).
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('keydown', handleMouseMove);
-    window.addEventListener('scroll', handleMouseMove);
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+    window.addEventListener('touchstart', handleActivity);
 
-    // Her saniye idle süresini artır
     intervalRef.current = setInterval(() => {
       idleTimeRef.current += 1;
       setIdleTime(idleTimeRef.current);
@@ -40,9 +45,10 @@ export function useTracker(idleThresholdSeconds: number = 5): TrackerData {
     }, 1000);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('keydown', handleMouseMove);
-      window.removeEventListener('scroll', handleMouseMove);
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+      window.removeEventListener('touchstart', handleActivity);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [idleThresholdSeconds]);
@@ -50,6 +56,7 @@ export function useTracker(idleThresholdSeconds: number = 5): TrackerData {
   return {
     idleTimeSeconds: idleTime,
     isRiskHigh,
-    mouseMovements
+    mouseMovements,
+    reset,
   };
 }

@@ -1,20 +1,20 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Zap, BarChart3 } from 'lucide-react';
+import { BarChart3, Zap } from 'lucide-react';
 
 interface MetricCardProps {
   icon: ReactNode;
   label: string;
   value: string;
   subtitle: string;
-  accentColor?: 'red' | 'green' | 'blue';
+  accentColor?: 'red' | 'green' | 'orange';
 }
 
 const accentStyles = {
-  red: 'text-error-500',
-  green: 'text-success-600',
-  blue: 'text-primary-600',
+  red: 'from-rose-500/10 to-rose-500/5 text-rose-600',
+  green: 'from-emerald-500/10 to-emerald-500/5 text-emerald-600',
+  orange: 'from-primary-500/15 to-primary-500/5 text-primary-700',
 } as const;
 
 export function MetricCard({
@@ -22,21 +22,21 @@ export function MetricCard({
   label,
   value,
   subtitle,
-  accentColor = 'blue',
+  accentColor = 'orange',
 }: MetricCardProps) {
   return (
-    <div className="rounded-lg border border-neutral-200 bg-surface-primary p-4 shadow-sm transition-shadow duration-normal hover:shadow-md">
-      <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-neutral-500">
-        <span className={accentStyles[accentColor]}>{icon}</span>
+    <div
+      className={`rounded-2xl border border-neutral-100 bg-gradient-to-br p-4 shadow-xs ${accentStyles[accentColor]}`}
+    >
+      <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider opacity-80">
+        {icon}
         {label}
       </div>
-      <div className="text-2xl font-bold text-foreground">{value}</div>
-      <div className="mt-1 text-xs text-neutral-500">{subtitle}</div>
+      <p className="text-2xl font-extrabold text-foreground">{value}</p>
+      <p className="mt-1 text-xs text-neutral-600">{subtitle}</p>
     </div>
   );
 }
-
-/* ── Pre-configured metric cards ────────────────────────────── */
 
 interface RiskMetricProps {
   riskScore: number;
@@ -47,7 +47,7 @@ export function RiskMetric({ riskScore, userProfile }: RiskMetricProps) {
   return (
     <MetricCard
       icon={<Zap className="h-4 w-4" />}
-      label="Risk"
+      label="Terk riski"
       value={`${riskScore}/100`}
       subtitle={userProfile}
       accentColor="red"
@@ -63,9 +63,9 @@ export function ROIMetric({ monthlyRecovery }: ROIMetricProps) {
   return (
     <MetricCard
       icon={<BarChart3 className="h-4 w-4" />}
-      label="ROI"
+      label="Kurtarilan ciro"
       value={`${monthlyRecovery.toLocaleString('tr-TR')} TL`}
-      subtitle="aylik tahmini kurtarim"
+      subtitle="aylik tahmini"
       accentColor="green"
     />
   );

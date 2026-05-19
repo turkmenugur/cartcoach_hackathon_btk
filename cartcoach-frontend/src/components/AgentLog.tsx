@@ -9,7 +9,7 @@ interface AgentLogProps {
 
 export function AgentLog({ events, analysisError }: AgentLogProps) {
   return (
-    <div className="rounded-lg border border-neutral-200 bg-surface-primary p-4 shadow-sm">
+    <div className="commerce-card p-4">
       <div className="mb-3 flex items-center gap-2 text-sm font-bold text-foreground">
         <Activity className="h-4 w-4 text-primary-600" />
         Agent Karar Gunlugu

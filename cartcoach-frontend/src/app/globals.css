@@ -9,26 +9,26 @@
    ============================================================ */
 
 :root {
-  /* ── Brand Colors ─────────────────────────────────────────── */
-  --color-primary-50:  #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* ── Brand Colors (modern commerce — warm orange CTA) ─────── */
+  --color-primary-50:  #fff7ed;
+  --color-primary-100: #ffedd5;
+  --color-primary-200: #fed7aa;
+  --color-primary-300: #fdba74;
+  --color-primary-400: #fb923c;
+  --color-primary-500: #f97316;
+  --color-primary-600: #ea580c;
+  --color-primary-700: #c2410c;
+  --color-primary-800: #9a3412;
+  --color-primary-900: #7c2d12;
 
-  --color-secondary-50:  #eef2ff;
-  --color-secondary-100: #e0e7ff;
-  --color-secondary-200: #c7d2fe;
-  --color-secondary-500: #6366f1;
-  --color-secondary-600: #4f46e5;
-  --color-secondary-700: #4338ca;
-  --color-secondary-800: #3730a3;
-  --color-secondary-900: #312e81;
+  --color-secondary-50:  #f8fafc;
+  --color-secondary-100: #f1f5f9;
+  --color-secondary-200: #e2e8f0;
+  --color-secondary-500: #64748b;
+  --color-secondary-600: #475569;
+  --color-secondary-700: #334155;
+  --color-secondary-800: #1e293b;
+  --color-secondary-900: #0f172a;
 
   /* ── Neutral Palette ──────────────────────────────────────── */
   --color-neutral-50:  #f9fafb;
@@ -67,8 +67,10 @@
   --surface-overlay:    rgba(0, 0, 0, 0.40);
   --surface-overlay-heavy: rgba(0, 0, 0, 0.85);
 
-  --background:  var(--color-neutral-50);
-  --foreground:  var(--color-neutral-900);
+  --background:  #f3f4f6;
+  --foreground:  #18181b;
+  --commerce-header: #ffffff;
+  --commerce-card: #ffffff;
 
   /* ── Typography ───────────────────────────────────────────── */
   --font-sans: var(--font-geist-sans), 'Inter', system-ui, -apple-system, sans-serif;
@@ -124,8 +126,9 @@
   --shadow-xl:    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
   --shadow-2xl:   0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
-  --shadow-primary: 0 4px 14px 0 rgba(37, 99, 235, 0.25);
-  --shadow-primary-lg: 0 8px 24px 0 rgba(37, 99, 235, 0.30);
+  --shadow-primary: 0 4px 14px 0 rgba(234, 88, 12, 0.28);
+  --shadow-primary-lg: 0 10px 28px 0 rgba(234, 88, 12, 0.32);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.04);
 
   /* ── Z-Index Scale ────────────────────────────────────────── */
   --z-base:       0;
@@ -163,17 +166,6 @@
   --border-primary: 1px solid var(--color-primary-200);
 }
 
-/* ── Dark mode support ──────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background:       var(--color-neutral-950);
-    --foreground:       var(--color-neutral-100);
-    --surface-primary:  var(--color-neutral-900);
-    --surface-secondary: var(--color-neutral-800);
-    --surface-elevated: var(--color-neutral-800);
-  }
-}
-
 /* ── Base Styles ────────────────────────────────────────────── */
 body {
   color: var(--foreground);
@@ -183,6 +175,21 @@ body {
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Commerce page backdrop ─────────────────────────────────── */
+.commerce-page-bg {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 0% -10%, rgba(249, 115, 22, 0.09), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(15, 23, 42, 0.05), transparent);
+}
+
+.commerce-card {
+  background: var(--commerce-card);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
 }
 
 /* ── Focus Ring System (A11y) ───────────────────────────────── */
